@@ -17,6 +17,7 @@ NetCenter::NetCenter(JNIEnv* jni, jobject j_observer)
 NetCenter::~NetCenter()
 {
     NetExit();
+    delete rw_local_;
 }
 
 int NetCenter::NetInit()
