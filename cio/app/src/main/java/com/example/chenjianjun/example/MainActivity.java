@@ -154,7 +154,7 @@ public class MainActivity extends Activity {
                 byte[] result=info.toByteArray();
                 int len=info.getSerializedSize();
 
-                for (int i = 0; i < 12; ++i) {
+                for (int i = 0; i < 15; ++i) {
                     CIO.getInstance().SendDataWithFD(fd, result, len);
                 }
 
