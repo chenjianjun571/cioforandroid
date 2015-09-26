@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.google.protobuf.ByteString;
 import com.jsbn.protoc.protocol;
 
 import org.cio.CIO;
@@ -146,15 +147,57 @@ public class MainActivity extends Activity {
                 if (fd < 0) return;
                 if (connect_flg != 0) return;
 
-                // 测试代码
-                protocol.BSSNetProtocol.Builder builder=protocol.BSSNetProtocol.newBuilder();
-                builder.setType(protocol.MSG.Heart_Beat);
+                {
+                    // 测试代码
+                    protocol.BSSNetProtocol.Builder builder = protocol.BSSNetProtocol.newBuilder();
+                    builder.setType(protocol.MSG.Heart_Beat);
 
-                protocol.BSSNetProtocol info=builder.build();
-                byte[] result=info.toByteArray();
-                int len=info.getSerializedSize();
+                    protocol.BSSNetProtocol info = builder.build();
+                    byte[] result = info.toByteArray();
+                    int len = info.getSerializedSize();
 
-                for (int i = 0; i < 15; ++i) {
+                    for (int i = 0; i < 15; ++i) {
+                        CIO.getInstance().SendDataWithFD(fd, result, len);
+                    }
+                }
+
+                // 发送一个登录请求
+                {
+                    // 测试代码
+                    protocol.BSSNetProtocol.Builder builder=protocol.BSSNetProtocol.newBuilder();
+                    builder.setType(protocol.MSG.Login_Request);
+
+                    {
+                        protocol.LoginRequest.Builder lrBuilder=protocol.LoginRequest.newBuilder();
+                        lrBuilder.setUsername(ByteString.copyFromUtf8("chenjianjun"));
+                        lrBuilder.setPassword("qwer#1234");
+                        builder.setLoginrequest(lrBuilder);
+                    }
+
+                    protocol.BSSNetProtocol info=builder.build();
+                    byte[] result=info.toByteArray();
+                    int len=info.getSerializedSize();
+
+                    CIO.getInstance().SendDataWithFD(fd, result, len);
+                }
+
+                // 发送一个登录应答
+                {
+                    // 测试代码
+                    protocol.BSSNetProtocol.Builder builder=protocol.BSSNetProtocol.newBuilder();
+                    builder.setType(protocol.MSG.Login_Response);
+
+                    {
+                        protocol.LoginResponse.Builder lrsBuilder = protocol.LoginResponse.newBuilder();
+                        lrsBuilder.setErrorDescription(ByteString.copyFromUtf8("登录应答"));
+                        lrsBuilder.setResult(5678);
+                        builder.setLoginresponse(lrsBuilder);
+                    }
+
+                    protocol.BSSNetProtocol info=builder.build();
+                    byte[] result=info.toByteArray();
+                    int len=info.getSerializedSize();
+
                     CIO.getInstance().SendDataWithFD(fd, result, len);
                 }
 
