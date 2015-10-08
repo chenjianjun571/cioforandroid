@@ -1,6 +1,8 @@
 package com.example.chenjianjun.example;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -83,7 +85,7 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-
+    private int i = 0;
     public class MyDelegate implements CIODelegate {
 
         @Override
@@ -92,7 +94,10 @@ public class MainActivity extends Activity {
             // 1.不要在此函数里面调用CIO的接口，否则会造成底层死锁
             // 2.不要在此函数里面做一些阻塞性的操作，否则会阻塞底层通信线程
             // 3.建议通过sendMessage的方式把数据传递到其他线程去处理
-            Log.e("chenjianjun", "收到数据");
+            //Log.e("chenjianjun", "收到数据");
+            if (++i == 9999) {
+                Log.e("chenjianjun", "结束了....");
+            }
 
         }
 
@@ -134,7 +139,7 @@ public class MainActivity extends Activity {
     };
 
 
-    private int TIME = 1000;
+    private int TIME = 10000;
     Handler handler = new Handler();
     Runnable runnable = new Runnable() {
 
@@ -142,65 +147,58 @@ public class MainActivity extends Activity {
         public void run() {
             // handler自带方法实现定时器
             try {
-                handler.postDelayed(this, TIME);
-
                 if (fd < 0) return;
                 if (connect_flg != 0) return;
 
+                // 心跳
+                // 测试代码
+                protocol.BSSNetProtocol.Builder BSbuilder = protocol.BSSNetProtocol.newBuilder();
+                BSbuilder.setType(protocol.MSG.Heart_Beat);
+                protocol.BSSNetProtocol BSinfo = BSbuilder.build();
+                byte[] BSresult = BSinfo.toByteArray();
+                int BSlen = BSinfo.getSerializedSize();
+
+                // 登录请求
+                // 测试代码
+                protocol.BSSNetProtocol.Builder LRbuilder=protocol.BSSNetProtocol.newBuilder();
+                LRbuilder.setType(protocol.MSG.Login_Request);
+
                 {
-                    // 测试代码
-                    protocol.BSSNetProtocol.Builder builder = protocol.BSSNetProtocol.newBuilder();
-                    builder.setType(protocol.MSG.Heart_Beat);
+                    protocol.LoginRequest.Builder LRSBuilder=protocol.LoginRequest.newBuilder();
+                    LRSBuilder.setUsername(ByteString.copyFromUtf8("chenjianjun"));
+                    LRSBuilder.setPassword("qwer#1234");
+                    LRbuilder.setLoginrequest(LRSBuilder);
+                }
+                protocol.BSSNetProtocol LRinfo=LRbuilder.build();
+                byte[] LRresult=LRinfo.toByteArray();
+                int LRlen=LRinfo.getSerializedSize();
 
-                    protocol.BSSNetProtocol info = builder.build();
-                    byte[] result = info.toByteArray();
-                    int len = info.getSerializedSize();
+                // 登录应答
+                // 测试代码
+                protocol.BSSNetProtocol.Builder LSbuilder=protocol.BSSNetProtocol.newBuilder();
+                LSbuilder.setType(protocol.MSG.Login_Response);
 
-                    for (int i = 0; i < 15; ++i) {
-                        CIO.getInstance().SendDataWithFD(fd, result, len);
-                    }
+                {
+                    protocol.LoginResponse.Builder LSlrsBuilder = protocol.LoginResponse.newBuilder();
+                    LSlrsBuilder.setErrorDescription(ByteString.copyFromUtf8("登录应答"));
+                    LSlrsBuilder.setResult(5678);
+                    LSbuilder.setLoginresponse(LSlrsBuilder);
                 }
 
-                // 发送一个登录请求
+                protocol.BSSNetProtocol LSinfo=LSbuilder.build();
+                byte[] LSresult=LSinfo.toByteArray();
+                int LSlen=LSinfo.getSerializedSize();
+
+                Log.e("chenjianjun", "测试开始");
+                for (int i = 0; i < 1000; ++i)
                 {
-                    // 测试代码
-                    protocol.BSSNetProtocol.Builder builder=protocol.BSSNetProtocol.newBuilder();
-                    builder.setType(protocol.MSG.Login_Request);
-
-                    {
-                        protocol.LoginRequest.Builder lrBuilder=protocol.LoginRequest.newBuilder();
-                        lrBuilder.setUsername(ByteString.copyFromUtf8("chenjianjun"));
-                        lrBuilder.setPassword("qwer#1234");
-                        builder.setLoginrequest(lrBuilder);
-                    }
-
-                    protocol.BSSNetProtocol info=builder.build();
-                    byte[] result=info.toByteArray();
-                    int len=info.getSerializedSize();
-
-                    CIO.getInstance().SendDataWithFD(fd, result, len);
+                    CIO.getInstance().SendDataWithFD(fd, BSresult, BSlen);
+                    CIO.getInstance().SendDataWithFD(fd, LRresult, LRlen);
+                    CIO.getInstance().SendDataWithFD(fd, LSresult, LSlen);
                 }
+                Log.e("chenjianjun", "发送数据结束");
 
-                // 发送一个登录应答
-                {
-                    // 测试代码
-                    protocol.BSSNetProtocol.Builder builder=protocol.BSSNetProtocol.newBuilder();
-                    builder.setType(protocol.MSG.Login_Response);
-
-                    {
-                        protocol.LoginResponse.Builder lrsBuilder = protocol.LoginResponse.newBuilder();
-                        lrsBuilder.setErrorDescription(ByteString.copyFromUtf8("登录应答"));
-                        lrsBuilder.setResult(5678);
-                        builder.setLoginresponse(lrsBuilder);
-                    }
-
-                    protocol.BSSNetProtocol info=builder.build();
-                    byte[] result=info.toByteArray();
-                    int len=info.getSerializedSize();
-
-                    CIO.getInstance().SendDataWithFD(fd, result, len);
-                }
-
+                handler.postDelayed(this, TIME);
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

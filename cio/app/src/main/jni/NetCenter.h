@@ -119,7 +119,7 @@ private:
 
     // 网络连接对象
     std::map<SOCKET, struct stSocketObj*> socket_objs;
-    RWLock* rw_local_;
+    CriticalSection cs_;
 };
 
 
