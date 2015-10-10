@@ -95,7 +95,7 @@ public class MainActivity extends Activity {
             // 2.不要在此函数里面做一些阻塞性的操作，否则会阻塞底层通信线程
             // 3.建议通过sendMessage的方式把数据传递到其他线程去处理
             //Log.e("chenjianjun", "收到数据");
-            if (++i == 9999) {
+            if (++i == 30000) {
                 Log.e("chenjianjun", "结束了....");
             }
 
@@ -190,7 +190,7 @@ public class MainActivity extends Activity {
                 int LSlen=LSinfo.getSerializedSize();
 
                 Log.e("chenjianjun", "测试开始");
-                for (int i = 0; i < 1000; ++i)
+                for (int i = 0; i < 10000; ++i)
                 {
                     CIO.getInstance().SendDataWithFD(fd, BSresult, BSlen);
                     CIO.getInstance().SendDataWithFD(fd, LRresult, LRlen);
